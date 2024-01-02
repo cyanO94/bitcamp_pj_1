@@ -13,6 +13,51 @@
 ![img](./images/contributors.png)
 ![img](./images/recipe_board.png)
 
+## Jenkins pipeline
+
+```
+pipeline {
+    agent any
+
+    environment {
+        MAIN_REPO = 'https://github.com/insikkim1234/Semiproject.git'
+        SUBMODULE_REPO = 'https://github.com/cyanO94/bitcampSensitiveInfo.git'
+		GIT_CREDENTIALS = 'cyanO94'
+    }
+
+    stages {
+        stage('Checkout Project') {
+            steps {
+                script {
+                    checkout([$class: 'GitSCM', 
+					branches: [[name: '*/main']], 
+					doGenerateSubmoduleConfigurations: false, 
+					extensions: [[$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]], 
+					submoduleCfg: [], 
+					userRemoteConfigs: [[credentialsId: env.GIT_CREDENTIALS, url: env.MAIN_REPO]]])
+                }
+            }
+        }
+
+        stage('Build Project') {
+            steps {
+                script {
+                    sh 'mvn clean install'
+                }
+            }
+        }
+
+        stage('Deploy to Tomcat') {
+            steps {
+                script {
+                    sh "curl --upload-file target/semi-1.0.0-BUILD-SNAPSHOT.war '[IP]:[PORT]/manager/text/deploy?path=/semi&update=true' -u [ID]:[PASSWORD]"
+                }
+            }
+        }
+    }
+}
+```
+
 ## Contributor
 [한충희](https://github.com/mongdamhwa)
 [이승민](https://github.com/2Smean)
